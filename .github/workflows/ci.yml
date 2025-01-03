@@ -9,7 +9,7 @@ env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   DOCKER_REPO_NAME: "one2n-assignment"
-  VERSION: ${{ secrets.VERSION }}
+  SHORT_SHA: ${{ github.sha::7 }}
   GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
 
 jobs:
@@ -28,26 +28,26 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}" -f Dockerfile .
+          docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}" -f Dockerfile .
 
       - name: Login to DockerHub
         run: echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
 
       - name: Scan Image
         run: |
-          trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
+          trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}"
 
       - name: Push Image
         run: |
-          docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
+          docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}"
 
       - name: Update CronJob Manifest
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
+          sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}#" kubernetes/metric-cron.yaml
           
           git add kubernetes/metric-cron.yaml
-          git commit -m "Update image version to ${VERSION}"
+          git commit -m "Update image version to ${SHORT_SHA}"
           git push origin main
