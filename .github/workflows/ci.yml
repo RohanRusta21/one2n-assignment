@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to DockerHub Registry
+name: Build and Push Docker Image
 
 on:
   push:
@@ -14,7 +14,6 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -28,24 +27,24 @@ jobs:
         run: |
           docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}" -f Dockerfile .
 
-      - name: Log in to Docker registry
+      - name: Login to DockerHub
         run: echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
 
-      - name: Scan Docker Image
+      - name: Scan Image
         run: |
           trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
 
-      - name: Push Docker Image
+      - name: Push Image
         run: |
           docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
 
-      - name: Commit and Push Changes
+      - name: Update CronJob Manifest
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          sed -i "s#\(image:\s*\).*\$#\1docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
+          
+          sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
+          
           git add kubernetes/metric-cron.yaml
-          git commit -m "Update image version to ${VERSION} in metric-cron.yaml"
+          git commit -m "Update image version to ${VERSION}"
           git push origin main
-
-
