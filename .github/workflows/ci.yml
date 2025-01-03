@@ -46,5 +46,6 @@ jobs:
           sed -i "s#\(image:\s*\).*\$#\1docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
           git add kubernetes/metric-cron.yaml
           git commit -m "Update image version to ${VERSION} in metric-cron.yaml"
-          git push https://github-actions[bot]:${{ secrets.GIT_TOKEN }}@github.com/RohanRusta21/one2n-assignment.git main
+          git push origin main
+
 
