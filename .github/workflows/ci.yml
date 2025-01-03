@@ -29,19 +29,19 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${version}" -f Dockerfile .
+          docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}" -f Dockerfile .
 
       - name: Log in to Docker registry
         run: echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
 
       - name: Scan Docker Image
         run: |
-          trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${version}"
+          trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
 
       - name: Push Docker Image
         run: |
-          docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${version}"
+          docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
 
       - name: Update Application Deployment Version
         run: |
-          sed -i "s#\(image:\s*\).*\$#\1docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${version}#" kubernetes/metric-cron.yaml
+          sed -i "s#\(image:\s*\).*\$#\1docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
