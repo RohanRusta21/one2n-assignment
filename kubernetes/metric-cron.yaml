@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: node-metrics
-              image: docker.io/rohanrustagi18/one2n-assignment:2404c7e
+              image: docker.io/rohanrustagi18/one2n-assignment:15fd22c
               env:
                 - name: NODE_EXPORTER_URL
                   valueFrom:
