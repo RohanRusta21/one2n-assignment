@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USER }}
@@ -42,16 +39,11 @@ jobs:
         run: |
           docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}"
 
-      - name: Update Application Deployment Version
-        run: |
-          sed -i "s#\(image:\s*\).*\$#\1docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
-
-      - name: Commit and Push Changes
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
+      - name: Update Application Deployment Version and Commit Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          sed -i "s#\(image:\s*\).*\$#\1docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${VERSION}#" kubernetes/metric-cron.yaml
           git add kubernetes/metric-cron.yaml
           git commit -m "Update image version to ${VERSION} in metric-cron.yaml"
-          git push https://$GH_PAT@github.com/RohanRusta21/one2n-assignment.git main
+          git push origin main
