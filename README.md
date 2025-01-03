@@ -33,7 +33,7 @@
    
 #### Assumptions made accross the task:
   - Used UTC timezone for creating files name.
-  - Used /data/metrics path for minikube node which will be sync with the pod directory also. (sudo mkdir -p/data/metrics && sudo chmod -R 777 /data/metrics inside minikube node).
+  - Used /data/metrics path for minikube node which will be sync with the pod directory also. (sudo mkdir -p/data/metrics && sudo chmod -R 777 /data/metrics inside minikube node)..
 
 
 #### Video for references
