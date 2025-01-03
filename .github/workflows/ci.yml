@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'kubernetes/**'  # Ignore changes to kubernetes directory
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USER }}
@@ -48,11 +46,20 @@ jobs:
 
       - name: Update CronJob Manifest
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          chmod +x update-image-tag.sh
+          ./update-image-tag.sh ${{ steps.sha.outputs.sha7 }}
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USER }}
+          DOCKER_REPO_NAME: ${{ env.DOCKER_REPO_NAME }}    
+
+      # - name: Update CronJob Manifest
+      #   run: |
+      #     git config --global user.name "github-actions[bot]"
+      #     git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9a-zA-Z]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${{ steps.sha.outputs.sha7 }}#" kubernetes/metric-cron.yaml
+      #     sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9a-zA-Z]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${{ steps.sha.outputs.sha7 }}#" kubernetes/metric-cron.yaml
           
-          git add kubernetes/metric-cron.yaml
-          git commit -m "Update image version to ${{ steps.sha.outputs.sha7 }}"
-          git push origin main
+      #     git add kubernetes/metric-cron.yaml
+      #     git commit -m "Update image version to ${{ steps.sha.outputs.sha7 }}"
+      #     git push origin main
