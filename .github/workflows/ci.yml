@@ -10,6 +10,7 @@ env:
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   DOCKER_REPO_NAME: "one2n-assignment"
   VERSION: ${{ secrets.VERSION }}
+  GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
 
 jobs:
   build-and-push:
@@ -17,6 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GIT_TOKEN }}
 
       - name: Install Trivy
         run: |
