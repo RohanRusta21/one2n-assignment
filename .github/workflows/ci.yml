@@ -9,7 +9,6 @@ env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USER }}
   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   DOCKER_REPO_NAME: "one2n-assignment"
-  SHORT_SHA: ${{ github.sha::7 }}
   GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
 
 jobs:
@@ -20,6 +19,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GIT_TOKEN }}
+          
+      - name: Get short SHA
+        id: sha
+        run: echo "::set-output name=sha7::$(echo ${GITHUB_SHA} | cut -c1-7)"
 
       - name: Install Trivy
         run: |
@@ -28,26 +31,26 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}" -f Dockerfile .
+          docker build -t "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${{ steps.sha.outputs.sha7 }}" -f Dockerfile .
 
       - name: Login to DockerHub
         run: echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
 
       - name: Scan Image
         run: |
-          trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}"
+          trivy image "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${{ steps.sha.outputs.sha7 }}"
 
       - name: Push Image
         run: |
-          docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}"
+          docker push "${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${{ steps.sha.outputs.sha7 }}"
 
       - name: Update CronJob Manifest
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${SHORT_SHA}#" kubernetes/metric-cron.yaml
+          sed -i "s#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:[0-9a-zA-Z]*#image: docker.io/${DOCKERHUB_USERNAME}/${DOCKER_REPO_NAME}:${{ steps.sha.outputs.sha7 }}#" kubernetes/metric-cron.yaml
           
           git add kubernetes/metric-cron.yaml
-          git commit -m "Update image version to ${SHORT_SHA}"
+          git commit -m "Update image version to ${{ steps.sha.outputs.sha7 }}"
           git push origin main
